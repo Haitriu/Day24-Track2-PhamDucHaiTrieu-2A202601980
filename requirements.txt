@@ -1,11 +1,12 @@
 requests>=2.31,<3
 pytest>=8.0,<10
 
-# Stretch goal only (agent/pii.py có thể dùng thay cho regex-only) — KHÔNG
-# cần cài để hoàn thành lab ở mức yêu cầu. Không có model tiếng Việt chính
-# thức cho spaCy; xem day24-LAB-SPEC.md §3a trước khi thử.
-# presidio-analyzer
-# spacy
+# Stretch goal #2 only (scripts/compare_pii_ner.py) — KHÔNG cần cài để
+# hoàn thành lab ở mức yêu cầu, agent/pii.py dùng thuần regex. Không có
+# model tiếng Việt chính thức cho spaCy (xem reports/pii-ner-comparison.md):
+# sau khi cài, chạy thêm `python -m spacy download en_core_web_sm`.
+presidio-analyzer
+spacy
 
 # Chỉ cần nếu dùng --model claude-... thay cho --mock (không bắt buộc,
 # và KHÔNG dùng để chấm điểm — xem day24-LAB-SPEC.md §2).
