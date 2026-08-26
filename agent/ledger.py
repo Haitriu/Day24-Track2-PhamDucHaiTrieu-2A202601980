@@ -33,12 +33,59 @@ rồi gọi verify() phải trả về False.
 """
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
+
+_GENESIS_HASH = "0" * 64
+
+
+def _compute_hash(entry_without_hash: dict) -> str:
+    payload = json.dumps(entry_without_hash, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _read_lines(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return [json.loads(line) for line in lines]
 
 
 def append(entry: dict, path: Path) -> dict:
-    raise NotImplementedError("BƯỚC 3d: implement ledger append")
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    existing = _read_lines(path)
+    prev_hash = existing[-1]["hash"] if existing else _GENESIS_HASH
+
+    full_entry = dict(entry)
+    full_entry["prev_hash"] = prev_hash
+    full_entry["hash"] = _compute_hash(full_entry)
+
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(full_entry, ensure_ascii=False) + "\n")
+
+    return full_entry
 
 
 def verify(path: Path) -> bool:
-    raise NotImplementedError("BƯỚC 3d: implement ledger verify")
+    path = Path(path)
+    entries = _read_lines(path)
+
+    prev_hash = _GENESIS_HASH
+    for entry in entries:
+        if not entry.get("reason"):
+            return False
+        if entry.get("prev_hash") != prev_hash:
+            return False
+
+        stored_hash = entry.get("hash")
+        recomputed_input = dict(entry)
+        recomputed_input.pop("hash", None)
+        if _compute_hash(recomputed_input) != stored_hash:
+            return False
+
+        prev_hash = stored_hash
+
+    return True
